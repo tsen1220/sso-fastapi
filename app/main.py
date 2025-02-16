@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 from fastapi import Depends
-from repositories.user_repository import UserRepository, get_user_repository
+from app.repositories import UserRepository, get_user_repository
 
 app = FastAPI()
 

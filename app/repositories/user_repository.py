@@ -1,11 +1,10 @@
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, Depends
-from schemas.user_schema import UserCreate, UserUpdate
-from database import get_db
-from models.user_model import User
+from app.schemas.user_schema import UserCreate, UserUpdate
+from app.database import get_db
+from app.models import User
 from datetime import datetime, timezone
-
 
 class UserRepository:
     def __init__(self, db: Session):

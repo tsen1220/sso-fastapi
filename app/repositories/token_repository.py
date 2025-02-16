@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import Depends
-from models.token_model import Token
-from database import get_db
+from app.models import Token
+from app.database import get_db
 from datetime import datetime, timezone
 
 
@@ -31,5 +31,5 @@ class TokenRepository:
         return False
     
 
-def get_user_repository(db: Session = Depends(get_db)) -> TokenRepository:
-    return Token(db)
+def get_token_repository(db: Session = Depends(get_db)) -> TokenRepository:
+    return TokenRepository(db)
