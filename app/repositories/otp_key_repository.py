@@ -3,19 +3,19 @@ from fastapi import Depends
 from app.models import OtpKey
 from app.database import get_db
 from datetime import datetime, timezone
-
+from typing import Optional
 
 class OtpKeyRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def find_otp_key_by_id(self, otp_key_id: int) -> OtpKey:
+    def find_otp_key_by_id(self, otp_key_id: int) -> Optional[OtpKey]:
         return self.db.query(OtpKey).filter(OtpKey.id == otp_key_id).first()
 
-    def find_otp_key_by_otp_key(self, otp_key: str) -> OtpKey:
+    def find_otp_key_by_otp_key(self, otp_key: str) -> Optional[OtpKey]:
         return self.db.query(OtpKey).filter(OtpKey.otp_key == otp_key).first()
     
-    def find_otp_key_by_user_id(self, user_id: str) -> OtpKey:
+    def find_otp_key_by_user_id(self, user_id: str) -> Optional[OtpKey]:
         return self.db.query(OtpKey).filter(OtpKey.user_id == user_id).first()
 
     def create_otp_key(self, otp_key: str, user_id: int) -> OtpKey:
