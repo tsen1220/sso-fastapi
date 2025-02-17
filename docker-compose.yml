@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - sso-fastapi-network
+
+  mysql:
+    image: mysql:8.2
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sso-fastapi
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - sso-fastapi-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  db-data:
+
+networks:
+  sso-fastapi-network:
+    driver: bridge
