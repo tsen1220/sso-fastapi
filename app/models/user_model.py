@@ -13,5 +13,5 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
-    tokens = relationship("Token", back_populates="user")
+    otp_keys = relationship("OtpKey", back_populates="user")
     
