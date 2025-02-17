@@ -5,6 +5,7 @@ from app.schemas.user_schema import UserCreate, UserUpdate
 from app.database import get_db
 from app.models import User
 from datetime import datetime, timezone
+from bcrypt import hashpw, gensalt, checkpw
 
 class UserRepository:
     def __init__(self, db: Session):
@@ -24,9 +25,18 @@ class UserRepository:
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         return user
+    
+    def check_password(self, email: str, password: str) -> User:
+        user = self.db.query(User).filter(User.email == email).first()
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+        if not checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid password")
+        return user
 
     def create_user(self, user: UserCreate) -> User:
-        db_user = User(email=user.email, password=user.password, username=user.username, created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc))
+        db_user = User(email=user.email, password=hashpw(user.password.encode('utf-8'), gensalt()).decode('utf-8'), username=user.username, created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc))
         self.db.add(db_user)
         self.db.commit()
         self.db.refresh(db_user)
@@ -44,7 +54,7 @@ class UserRepository:
             db_user.email = user.email
 
         if user.password is not None:
-            db_user.password = user.password
+            db_user.password = hashpw(user.password.encode('utf-8'), gensalt()).decode('utf-8')
 
         self.db.commit()
         self.db.refresh(db_user)
