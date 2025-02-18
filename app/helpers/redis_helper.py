@@ -5,7 +5,7 @@ from fastapi import Depends
 from app import get_redis
 
 class RedisHelper:
-    def __init__(self, redis: redis.Redis = Depends(get_redis)):
+    def __init__(self, redis: redis.Redis):
         self.redis = redis
 
     def set(self, key: str, value: any, ex: Optional[int] = None) -> bool:
@@ -141,3 +141,6 @@ class RedisHelper:
         except Exception as e:
             print(f"Redis ZRem Error: {e}")
             return False
+        
+def get_redis_helper(redis: redis.Redis = Depends(get_redis)):
+    return RedisHelper(redis)
