@@ -14,5 +14,5 @@ def Register(user: UserCreate, user_service: UserService = Depends(get_user_serv
 @user_route.post("/login")
 def Login(email: str, password: str, user_service: UserService = Depends(get_user_service), redis_helper: RedisHelper = Depends(get_redis_helper)):
     user_service.login_user(email, password)
-    redis_helper.set(f'user_email_{email}', 'true')
+    redis_helper.set(f'user:email_{email}', 'true')
     return Response(status_code=204)
