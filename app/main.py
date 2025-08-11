@@ -3,11 +3,13 @@ import uvicorn
 from fastapi import Depends
 from app.routes import user_route
 from app.routes.otp_route import otp_route
+from app.routes.auth_route import auth_route
 
 app = FastAPI()
 
 app.include_router(user_route)
 app.include_router(otp_route)
+app.include_router(auth_route)
 
 @app.get("/")
 def read_root():

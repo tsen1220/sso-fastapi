@@ -2,6 +2,7 @@ from fastapi import Depends, APIRouter, HTTPException
 from app.schemas import OtpKeyCreate, OtpKeyResponse, OtpVerifyRequest, OtpVerifyResponse
 from app.services import OtpKeyService, get_otp_key_service
 from app.services import UserService, get_user_service
+from app.helpers.jwt_helper import JWTHelper, get_jwt_helper
 
 otp_route = APIRouter(prefix="/otp", tags=["OTP"])
 
@@ -35,12 +36,31 @@ def generate_otp_key(
 @otp_route.post("/verify", response_model=OtpVerifyResponse)
 def verify_otp_code(
     request: OtpVerifyRequest,
-    otp_service: OtpKeyService = Depends(get_otp_key_service)
+    otp_service: OtpKeyService = Depends(get_otp_key_service),
+    user_service: UserService = Depends(get_user_service),
+    jwt_helper: JWTHelper = Depends(get_jwt_helper)
 ):
     is_valid = otp_service.verify_otp_code(request.user_id, request.otp_code)
     
     if is_valid:
-        return OtpVerifyResponse(success=True, message="OTP code is valid")
+        # Get user information for JWT
+        user = user_service.find_user_by_id(request.user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Generate JWT token
+        access_token = jwt_helper.create_user_token(
+            user_id=user.id,
+            email=user.email,
+            username=user.username
+        )
+        
+        return OtpVerifyResponse(
+            success=True, 
+            message="OTP code is valid",
+            access_token=access_token,
+            token_type="bearer"
+        )
     else:
         return OtpVerifyResponse(success=False, message="Invalid OTP code")
 

@@ -31,3 +31,5 @@ class OtpVerifyRequest(BaseModel):
 class OtpVerifyResponse(BaseModel):
     success: bool
     message: str
+    access_token: Optional[str] = None
+    token_type: Optional[str] = "bearer"
