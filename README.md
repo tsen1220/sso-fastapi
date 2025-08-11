@@ -7,6 +7,8 @@ A Single Sign-On (SSO) system built with FastAPI, featuring user registration, a
 - **FastAPI** - Modern, fast web framework
 - **User Management** - Registration, login, password encryption
 - **Two-Factor Authentication** - TOTP/OTP support, compatible with Google Authenticator
+- **JWT Authentication** - HS256 JWT tokens generated after OTP verification
+- **Protected Endpoints** - JWT-based authentication middleware
 - **Redis** - Session management and caching
 - **MySQL** - Primary database
 - **Docker** - Containerized deployment
@@ -21,7 +23,8 @@ app/
 ├── database.py          # Database connection and session management
 ├── routes/              # API routes
 │   ├── user_route.py    # User-related endpoints
-│   └── otp_route.py     # OTP-related endpoints
+│   ├── otp_route.py     # OTP-related endpoints
+│   └── auth_route.py    # JWT-protected endpoints
 ├── services/            # Business logic layer
 │   ├── user_service.py  # User service
 │   └── otp_key_service.py # OTP service
@@ -35,7 +38,9 @@ app/
 │   ├── user_schema.py
 │   └── otp_schema.py
 └── helpers/             # Utility classes
-    └── redis_helper.py  # Redis helper
+    ├── redis_helper.py  # Redis helper
+    ├── jwt_helper.py    # JWT token management
+    └── auth_helper.py   # Authentication middleware
 ```
 
 ## 📋 System Requirements
@@ -44,6 +49,7 @@ app/
 - Docker & Docker Compose
 - MySQL 8.2+
 - Redis 7.4+
+- PyJWT 2.9.0+ (for JWT token management)
 
 ## 🛠 Installation & Setup
 
@@ -100,6 +106,9 @@ cat > app/.env << EOF
 DATABASE_URL=mysql+pymysql://root:root@localhost/sso-fastapi
 REDIS_HOST=localhost
 REDIS_PORT=6379
+JWT_SECRET_KEY=your-super-secret-jwt-key
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_HOURS=24
 EOF
 ```
 
@@ -174,9 +183,16 @@ After starting the application, you can view API documentation at:
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/otp/generate` | Generate OTP key for user |
-| POST | `/otp/verify` | Verify OTP code |
+| POST | `/otp/verify` | Verify OTP code and generate JWT token |
 | GET | `/otp/{user_id}` | Get user OTP information |
 | DELETE | `/otp/{user_id}` | Delete user OTP key |
+
+### JWT Authentication
+
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| GET | `/auth/me` | Get current user information | Bearer Token |
+| GET | `/auth/profile` | Get user profile | Bearer Token |
 
 ## 🧪 Testing OTP Functionality
 
@@ -199,11 +215,30 @@ curl -X POST "http://localhost:8000/otp/generate" \
    - Use a QR code generator to create the QR code
    - Scan with Google Authenticator
 
-4. **Verify OTP code**
+4. **Verify OTP code and get JWT token**
 ```bash
 curl -X POST "http://localhost:8000/otp/verify" \
      -H "Content-Type: application/json" \
      -d '{"user_id": 1, "otp_code": "123456"}'
+
+# Expected response:
+{
+  "success": true,
+  "message": "OTP code is valid",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+```
+
+5. **Use JWT token to access protected endpoints**
+```bash
+# Get current user information
+curl -X GET "http://localhost:8000/auth/me" \
+     -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Get user profile
+curl -X GET "http://localhost:8000/auth/profile" \
+     -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
 ## 🔧 Development Tools
@@ -251,7 +286,12 @@ docker-compose logs redis
    - Ensure time synchronization is correct
    - Check if OTP key was generated correctly
 
-4. **Port already in use**
+4. **JWT token invalid**
+   - Check if JWT_SECRET_KEY matches between generation and verification
+   - Verify token hasn't expired
+   - Ensure proper Bearer token format: `Authorization: Bearer <token>`
+
+5. **Port already in use**
 ```bash
 # Check port usage
 lsof -i :8000
@@ -268,11 +308,21 @@ docker-compose down
 
 - Database: `mysql+pymysql://root:root@localhost/sso-fastapi`
 - Redis: `localhost:6379`
+- JWT Secret: Set via environment variable
 
 ### Docker Environment
 
 - Database: `mysql+pymysql://root:root@mysql/sso-fastapi`
 - Redis: `redis:6379`
+- JWT Secret: Set via environment variable
+
+### JWT Configuration
+
+| Environment Variable | Default Value | Description |
+|---------------------|---------------|-------------|
+| `JWT_SECRET_KEY` | `your-super-secret-jwt-key` | Secret key for JWT signing |
+| `JWT_ALGORITHM` | `HS256` | JWT signing algorithm |
+| `JWT_EXPIRATION_HOURS` | `24` | Token expiration time in hours |
 
 ## 🤝 Contributing
 
