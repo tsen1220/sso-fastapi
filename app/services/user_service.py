@@ -5,16 +5,19 @@ from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from fastapi import status
 from bcrypt import checkpw
+from typing import Optional
 
 class UserService:
     def __init__(self, user_repo: UserRepository):
         self.user_repo = user_repo
 
-    def find_user_by_id(self, user_id: int) -> User:
+    def find_user_by_id(self, user_id: int) -> Optional[User]:
+        return self.user_repo.find_user_by_id(user_id)
+    
+    def get_user_by_id(self, user_id: int) -> User:
         user = self.user_repo.find_user_by_id(user_id)
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
         return user
     
     def find_user_by_email(self, email: str) -> User:

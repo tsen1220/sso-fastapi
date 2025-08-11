@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 from app.database import Base
 
 class OtpKey(Base):
-    __tablename__ = 'opt_keys'
+    __tablename__ = 'otp_keys'
 
     id = Column(Integer, primary_key=True, index=True)
     otp_key = Column(String(255), unique=True, index=True, nullable=False)

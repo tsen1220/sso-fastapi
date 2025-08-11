@@ -15,7 +15,7 @@ class OtpKeyRepository:
     def find_otp_key_by_otp_key(self, otp_key: str) -> Optional[OtpKey]:
         return self.db.query(OtpKey).filter(OtpKey.otp_key == otp_key).first()
     
-    def find_otp_key_by_user_id(self, user_id: str) -> Optional[OtpKey]:
+    def find_otp_key_by_user_id(self, user_id: int) -> Optional[OtpKey]:
         return self.db.query(OtpKey).filter(OtpKey.user_id == user_id).first()
 
     def create_otp_key(self, otp_key: str, user_id: int) -> OtpKey:

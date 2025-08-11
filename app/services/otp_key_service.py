@@ -20,12 +20,19 @@ class OtpKeyService:
     def delete_otp_key(self, otp_key_id: int) -> bool:
         return self.otp_key_repository.delete_otp_key(otp_key_id)
     
-    def verify_otp_key(self, user_id: int) -> bool:
+    def verify_otp_code(self, user_id: int, otp_code: str) -> bool:
         otp_key = self.find_otp_key_by_user_id(user_id)
         if not otp_key:
             return False
         totp = TOTP(otp_key.otp_key)
-        return totp.verify(otp_key)
+        return totp.verify(otp_code)
+    
+    def generate_qr_code_uri(self, user_id: int, issuer_name: str = "SSO FastAPI") -> Optional[str]:
+        otp_key = self.find_otp_key_by_user_id(user_id)
+        if not otp_key:
+            return None
+        totp = TOTP(otp_key.otp_key)
+        return totp.provisioning_uri(name=otp_key.user.email, issuer_name=issuer_name)
 
 
 def get_otp_key_service(otp_key_repository: OtpKeyRepository = Depends(get_otp_key_repository)):
